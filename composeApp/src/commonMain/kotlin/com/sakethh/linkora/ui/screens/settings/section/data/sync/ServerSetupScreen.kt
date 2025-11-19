@@ -59,7 +59,6 @@ import com.sakethh.linkora.ui.screens.settings.common.composables.SettingsSectio
 import com.sakethh.linkora.ui.screens.settings.section.data.LogsScreen
 import com.sakethh.linkora.ui.utils.pressScaleEffect
 import com.sakethh.linkora.ui.utils.rememberMutableEnum
-import com.sakethh.linkora.platform.poppinsFontFamily
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -114,7 +113,7 @@ fun ServerSetupScreen(
 
             item {
                 TextField(
-                    textStyle = TextStyle(fontFamily = poppinsFontFamily),
+                    textStyle = MaterialTheme.typography.titleSmall,
                     modifier = Modifier.fillMaxWidthWithPadding(),
                     value = serverUrl.value,
                     onValueChange = {
@@ -138,7 +137,7 @@ fun ServerSetupScreen(
 
             item {
                 TextField(
-                    textStyle = TextStyle(fontFamily = poppinsFontFamily),
+                    textStyle = MaterialTheme.typography.titleSmall,
                     modifier = Modifier.fillMaxWidthWithPadding(),
                     value = securityToken.value,
                     onValueChange = { newValue ->

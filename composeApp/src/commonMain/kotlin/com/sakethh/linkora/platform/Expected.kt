@@ -19,8 +19,6 @@ expect val BUILD_FLAVOUR: String
 
 expect val platform: @Composable () -> Platform
 
-expect val poppinsFontFamily: FontFamily
-
 @Composable
 expect fun PlatformSpecificBackHandler(init: () -> Unit = {})
 

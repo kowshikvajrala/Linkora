@@ -11,7 +11,6 @@ import androidx.compose.ui.text.font.FontFamily
 import com.sakethh.linkora.domain.Platform
 import com.sakethh.linkora.ui.AppVM
 import com.sakethh.linkora.ui.LocalNavController
-import com.sakethh.linkora.ui.theme.poppinsFontFamily
 import com.sakethh.linkora.ui.utils.UIEvent
 import com.sakethh.linkora.utils.isTablet
 import kotlinx.coroutines.launch
@@ -22,7 +21,6 @@ actual val platform: @Composable () -> Platform = {
 }
 actual val BUILD_FLAVOUR: String = platform.toString()
 
-actual val poppinsFontFamily: FontFamily = poppinsFontFamily
 actual val showDynamicThemingOption: Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
 
 @Composable

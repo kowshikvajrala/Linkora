@@ -26,7 +26,7 @@ import com.sakethh.linkora.ui.LocalNavController
 import com.sakethh.linkora.ui.navigation.Navigation
 import com.sakethh.linkora.ui.screens.settings.SettingsScreenViewModel
 import com.sakethh.linkora.ui.screens.settings.common.composables.SettingsSectionScaffold
-import com.sakethh.linkora.ui.screens.settings.common.composables.TextFieldForPreference
+import com.sakethh.linkora.ui.screens.settings.common.composables.PreferenceTextField
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -60,7 +60,7 @@ fun AdvancedSettingsScreen() {
                 Spacer(Modifier)
             }
             item {
-                TextFieldForPreference(
+                PreferenceTextField(
                     textFieldDescText = Localization.Key.UserAgentDesc.rememberLocalizedString(),
                     textFieldLabel = Localization.Key.UserAgent.rememberLocalizedString(),
                     textFieldValue = primaryJsoupStringAgent.value,
@@ -97,7 +97,7 @@ fun AdvancedSettingsScreen() {
             }
 
             item {
-                TextFieldForPreference(
+                PreferenceTextField(
                     textFieldDescText = Localization.Key.LocalizationServerDesc.rememberLocalizedString(),
                     textFieldLabel = Localization.Key.LocalizationServer.rememberLocalizedString(),
                     textFieldValue = localizationServerURL.value,

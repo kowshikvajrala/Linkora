@@ -26,6 +26,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Start
+import androidx.compose.material.icons.filled.TextFields
 import androidx.compose.material.icons.filled.VideoLabel
 import androidx.compose.material.icons.outlined.PresentToAll
 import androidx.compose.material3.AlertDialog
@@ -66,6 +67,7 @@ import com.sakethh.linkora.preferences.AppPreferences
 import com.sakethh.linkora.ui.LocalNavController
 import com.sakethh.linkora.ui.components.InfoCard
 import com.sakethh.linkora.ui.domain.AppIconCode
+import com.sakethh.linkora.ui.domain.Font
 import com.sakethh.linkora.ui.navigation.Navigation
 import com.sakethh.linkora.ui.screens.settings.SettingsScreenViewModel
 import com.sakethh.linkora.ui.screens.settings.common.composables.SettingComponent
@@ -81,6 +83,9 @@ fun GeneralSettingsScreen() {
     val navController = LocalNavController.current
     val settingsScreenViewModel: SettingsScreenViewModel = linkoraViewModel()
     var showInitialNavigationChangerDialogBox by rememberSaveable {
+        mutableStateOf(false)
+    }
+    var showFontFamilySwitcherDialogBox by rememberSaveable {
         mutableStateOf(false)
     }
     val platform = platform()
@@ -152,6 +157,27 @@ fun GeneralSettingsScreen() {
                             mutableStateOf(true)
                         },
                         icon = Icons.Default.Start
+                    )
+                )
+            }
+
+            item {
+                SettingComponent(
+                    SettingComponentParam(
+                        title = "Change Font Family",
+                        doesDescriptionExists = false,
+                        description = "",
+                        isSwitchNeeded = false,
+                        isSwitchEnabled = rememberSaveable {
+                            mutableStateOf(false)
+                        },
+                        onSwitchStateChange = {
+                            showFontFamilySwitcherDialogBox = true
+                        },
+                        isIconNeeded = rememberSaveable {
+                            mutableStateOf(true)
+                        },
+                        icon = Icons.Default.TextFields
                     )
                 )
             }
@@ -342,67 +368,114 @@ fun GeneralSettingsScreen() {
                 currentlySelectedRoute.value = it
             }
         }
-        AlertDialog(onDismissRequest = {
-            showInitialNavigationChangerDialogBox = false
-        }, confirmButton = {
-            Button(onClick = {
+        SwitchDialogBox(
+            title = Localization.Key.SelectTheInitialScreen.rememberLocalizedString(),
+            entries = remember {
+                listOf(
+                    Navigation.Root.HomeScreen,
+                    Navigation.Root.SearchScreen,
+                    Navigation.Root.CollectionsScreen
+                )
+            },
+            selected = {
+                currentlySelectedRoute.value == it.toString()
+            },
+            onEntryClick = {
+                currentlySelectedRoute.value = it.toString()
+            },
+            onDismissRequest = {
+                showInitialNavigationChangerDialogBox = false
+            },
+            onConfirm = {
                 settingsScreenViewModel.changeSettingPreferenceValue(
                     stringPreferencesKey(
                         AppPreferenceType.INITIAL_ROUTE.name
                     ), currentlySelectedRoute.value
                 )
                 showInitialNavigationChangerDialogBox = false
-            }, modifier = Modifier.pointerHoverIcon(icon = PointerIcon.Hand).fillMaxWidth()) {
-                Text(
-                    text = Localization.Key.Confirm.rememberLocalizedString(),
-                    style = MaterialTheme.typography.titleMedium
-                )
-            }
-        }, dismissButton = {
-            OutlinedButton(onClick = {
-                showInitialNavigationChangerDialogBox = false
-            }, modifier = Modifier.pointerHoverIcon(icon = PointerIcon.Hand).fillMaxWidth()) {
-                Text(
-                    text = Localization.Key.Cancel.rememberLocalizedString(),
-                    style = MaterialTheme.typography.titleSmall
-                )
-            }
-        }, text = {
-            Column(verticalArrangement = Arrangement.spacedBy(15.dp)) {
-                listOf(
-                    Navigation.Root.HomeScreen,
-                    Navigation.Root.SearchScreen,
-                    Navigation.Root.CollectionsScreen
-                ).forEach {
-                    Row(
-                        modifier = Modifier.pointerHoverIcon(icon = PointerIcon.Hand).fillMaxWidth()
-                            .clickable(onClick = {
-                                currentlySelectedRoute.value = it.toString()
-                            }, indication = null, interactionSource = remember {
-                                MutableInteractionSource()
-                            }).pressScaleEffect(), verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        RadioButton(
-                            modifier = Modifier.pointerHoverIcon(icon = PointerIcon.Hand),
-                            selected = currentlySelectedRoute.value == it.toString(),
-                            onClick = {
-                                currentlySelectedRoute.value = it.toString()
-                            })
-                        Text(
-                            style = if (currentlySelectedRoute.value == it.toString()) MaterialTheme.typography.titleLarge else MaterialTheme.typography.titleSmall,
-                            text = it.toString(),
-                            color = if (currentlySelectedRoute.value == it.toString()) MaterialTheme.colorScheme.primary else LocalContentColor.current,
-                            fontSize = 16.sp
-                        )
-                    }
-                }
-            }
-        }, title = {
-            Text(
-                text = Localization.Key.SelectTheInitialScreen.rememberLocalizedString(),
-                style = MaterialTheme.typography.titleLarge,
-                fontSize = 24.sp
+            })
+    }
+    if (showFontFamilySwitcherDialogBox) {
+        var tempSelectedFont by rememberSaveable {
+            mutableStateOf(AppPreferences.selectedFont.name)
+        }
+        SwitchDialogBox(title = "Select a font", entries = Font.entries, selected = {
+            tempSelectedFont == it.name
+        }, onEntryClick = {
+            tempSelectedFont = it.name
+        }, onDismissRequest = {
+            showFontFamilySwitcherDialogBox = false
+        }, onConfirm = {
+            settingsScreenViewModel.changeSettingPreferenceValue(
+                stringPreferencesKey(
+                    AppPreferenceType.FONT_TYPE.name
+                ), tempSelectedFont
             )
+            AppPreferences.selectedFont = Font.valueOf(tempSelectedFont)
+            showFontFamilySwitcherDialogBox = false
         })
     }
+}
+
+@Composable
+private fun <T> SwitchDialogBox(
+    title: String,
+    entries: List<T>,
+    entryLabel: (T) -> String = { it.toString() },
+    selected: (T) -> Boolean,
+    onEntryClick: (T) -> Unit,
+    onDismissRequest: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    AlertDialog(onDismissRequest = onDismissRequest, confirmButton = {
+        Button(
+            onClick = onConfirm,
+            modifier = Modifier.pointerHoverIcon(icon = PointerIcon.Hand).fillMaxWidth()
+        ) {
+            Text(
+                text = Localization.Key.Confirm.rememberLocalizedString(),
+                style = MaterialTheme.typography.titleMedium
+            )
+        }
+    }, dismissButton = {
+        OutlinedButton(
+            onClick = onDismissRequest,
+            modifier = Modifier.pointerHoverIcon(icon = PointerIcon.Hand).fillMaxWidth()
+        ) {
+            Text(
+                text = Localization.Key.Cancel.rememberLocalizedString(),
+                style = MaterialTheme.typography.titleSmall
+            )
+        }
+    }, text = {
+        Column(verticalArrangement = Arrangement.spacedBy(15.dp)) {
+            entries.forEach {
+                Row(
+                    modifier = Modifier.pointerHoverIcon(icon = PointerIcon.Hand).fillMaxWidth()
+                        .clickable(onClick = {
+                            onEntryClick(it)
+                        }, indication = null, interactionSource = remember {
+                            MutableInteractionSource()
+                        }).pressScaleEffect(), verticalAlignment = Alignment.CenterVertically
+                ) {
+                    RadioButton(
+                        modifier = Modifier.pointerHoverIcon(icon = PointerIcon.Hand),
+                        selected = selected(it),
+                        onClick = {
+                            onEntryClick(it)
+                        })
+                    Text(
+                        style = if (selected(it)) MaterialTheme.typography.titleLarge else MaterialTheme.typography.titleSmall,
+                        text = entryLabel(it),
+                        color = if (selected(it)) MaterialTheme.colorScheme.primary else LocalContentColor.current,
+                        fontSize = 16.sp
+                    )
+                }
+            }
+        }
+    }, title = {
+        Text(
+            text = title, style = MaterialTheme.typography.titleLarge, fontSize = 24.sp
+        )
+    })
 }

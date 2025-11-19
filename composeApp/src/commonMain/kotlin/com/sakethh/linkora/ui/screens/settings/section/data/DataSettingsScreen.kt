@@ -63,7 +63,6 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -78,7 +77,6 @@ import com.sakethh.linkora.domain.Platform
 import com.sakethh.linkora.domain.model.settings.SettingComponentParam
 import com.sakethh.linkora.platform.PlatformSpecificBackHandler
 import com.sakethh.linkora.platform.platform
-import com.sakethh.linkora.platform.poppinsFontFamily
 import com.sakethh.linkora.preferences.AppPreferences
 import com.sakethh.linkora.ui.LocalNavController
 import com.sakethh.linkora.ui.components.DeleteDialogBoxType
@@ -244,7 +242,7 @@ fun DataSettingsScreen() {
                         doesDescriptionExists = true,
                         description = Localization.rememberLocalizedString(Localization.Key.ImportDataFromHtmlFileDesc),
                         isSwitchNeeded = false,
-                        isSwitchEnabled = AppPreferences.shouldUseAmoledTheme,
+                        isSwitchEnabled = AppPreferences.useAmoledTheme,
                         onSwitchStateChange = {
                             if (importFileSelectionMethod.value == ImportFileSelectionMethod.FileLocationString.name) {
                                 selectedImportFormat.value = ImportFileType.HTML.name
@@ -328,7 +326,7 @@ fun DataSettingsScreen() {
                         doesDescriptionExists = true,
                         description = Localization.rememberLocalizedString(Localization.Key.ExportDataAsJsonDesc),
                         isSwitchNeeded = false,
-                        isSwitchEnabled = AppPreferences.shouldUseAmoledTheme,
+                        isSwitchEnabled = AppPreferences.useAmoledTheme,
                         onSwitchStateChange = {
                             dataOperationTitle.value =
                                 Localization.Key.ExportingDataToJSON.getLocalizedString()
@@ -354,7 +352,7 @@ fun DataSettingsScreen() {
                         doesDescriptionExists = true,
                         description = Localization.rememberLocalizedString(Localization.Key.ExportDataAsHtmlDesc),
                         isSwitchNeeded = false,
-                        isSwitchEnabled = AppPreferences.shouldUseAmoledTheme,
+                        isSwitchEnabled = AppPreferences.useAmoledTheme,
                         onSwitchStateChange = {
                             dataOperationTitle.value =
                                 Localization.Key.ExportingDataToHTML.getLocalizedString()
@@ -405,7 +403,7 @@ fun DataSettingsScreen() {
                             doesDescriptionExists = true,
                             description = Localization.rememberLocalizedString(Localization.Key.ConnectToALinkoraServerDesc),
                             isSwitchNeeded = false,
-                            isSwitchEnabled = AppPreferences.shouldUseAmoledTheme,
+                            isSwitchEnabled = AppPreferences.useAmoledTheme,
                             onSwitchStateChange = {
                                 navController.navigate(Navigation.Settings.Data.ServerSetupScreen)
                             },
@@ -420,7 +418,7 @@ fun DataSettingsScreen() {
                             doesDescriptionExists = true,
                             description = Localization.rememberLocalizedString(Localization.Key.ManageConnectedServerDesc),
                             isSwitchNeeded = false,
-                            isSwitchEnabled = AppPreferences.shouldUseAmoledTheme,
+                            isSwitchEnabled = AppPreferences.useAmoledTheme,
                             onSwitchStateChange = {
                                 shouldServerInfoBtmSheetBeVisible.value = true
                                 coroutineScope.launch {
@@ -443,7 +441,7 @@ fun DataSettingsScreen() {
                             doesDescriptionExists = true,
                             description = Localization.Key.InitiateManualSyncDesc.rememberLocalizedString(),
                             isSwitchNeeded = false,
-                            isSwitchEnabled = AppPreferences.shouldUseAmoledTheme,
+                            isSwitchEnabled = AppPreferences.useAmoledTheme,
                             onSwitchStateChange = {
                                 serverManagementViewModel.saveServerConnectionAndSync(
                                     serverConnection = currentSavedServerConfig(),
@@ -478,7 +476,7 @@ fun DataSettingsScreen() {
                         doesDescriptionExists = true,
                         description = Localization.rememberLocalizedString(Localization.Key.DeleteDuplicateLinksFromAllCollectionsDesc),
                         isSwitchNeeded = false,
-                        isSwitchEnabled = AppPreferences.shouldUseAmoledTheme,
+                        isSwitchEnabled = AppPreferences.useAmoledTheme,
                         onSwitchStateChange = {
                             dataSettingsScreenVM.deleteDuplicates(onStart = {
                                 showDuplicateDeleteDialogBox.value = true
@@ -505,7 +503,7 @@ fun DataSettingsScreen() {
                         doesDescriptionExists = true,
                         description = Localization.rememberLocalizedString(Localization.Key.DeleteEntireDataPermanentlyDesc),
                         isSwitchNeeded = false,
-                        isSwitchEnabled = AppPreferences.shouldUseAmoledTheme,
+                        isSwitchEnabled = AppPreferences.useAmoledTheme,
                         onSwitchStateChange = {
                             shouldDeleteEntireDialogBoxAppear.value = true
                         },
@@ -731,7 +729,7 @@ fun DataSettingsScreen() {
                 onValueChange = {
                     fileLocation.value = it
                 },
-                textStyle = TextStyle(fontFamily = poppinsFontFamily),
+                textStyle = MaterialTheme.typography.titleSmall,
                 modifier = Modifier.fillMaxWidth()
             )
         }, title = {

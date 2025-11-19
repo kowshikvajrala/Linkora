@@ -28,10 +28,9 @@ import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.sakethh.linkora.platform.poppinsFontFamily
 
 @Composable
-fun TextFieldForPreference(
+fun PreferenceTextField(
     textFieldDescText: String,
     textFieldLabel: String,
     textFieldValue: String,
@@ -46,7 +45,7 @@ fun TextFieldForPreference(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        ProvideTextStyle(value = TextStyle(fontFamily = poppinsFontFamily)) {
+        ProvideTextStyle(value = MaterialTheme.typography.titleSmall) {
             OutlinedTextField(
                 supportingText = {
                     Text(

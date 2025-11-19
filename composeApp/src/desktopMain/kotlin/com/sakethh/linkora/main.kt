@@ -54,7 +54,6 @@ import com.sakethh.linkora.ui.App
 import com.sakethh.linkora.ui.LocalNavController
 import com.sakethh.linkora.ui.LocalPlatform
 import com.sakethh.linkora.ui.theme.DarkColors
-import com.sakethh.linkora.ui.theme.DesktopTypography
 import com.sakethh.linkora.ui.theme.LightColors
 import com.sakethh.linkora.ui.theme.LinkoraTheme
 import com.sakethh.linkora.utils.Constants
@@ -129,8 +128,7 @@ suspend fun main() {
                 LocalNavController provides navController, LocalPlatform provides Platform.Desktop
             ) {
                 LinkoraTheme(
-                    typography = DesktopTypography,
-                    colorScheme = if (AppPreferences.shouldUseForceDarkTheme.value) DarkColors else LightColors
+                    colorScheme = if (AppPreferences.useDarkTheme.value) DarkColors else LightColors
                 ) {
                     Scaffold(
                         topBar = {
