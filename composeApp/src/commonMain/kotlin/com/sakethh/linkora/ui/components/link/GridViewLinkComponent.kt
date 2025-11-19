@@ -82,7 +82,7 @@ fun GridViewLinkComponent(
                         ) else Modifier
                     ),
                     imgURL = linkComponentParam.link.imgURL,
-                    contentScale = if (linkComponentParam.link.imgURL.startsWith("https://pbs.twimg.com/profile_images/") || !AppPreferences.isShelfMinimizedInHomeScreen.value || !forStaggeredView) ContentScale.Crop else ContentScale.Fit,
+                    contentScale = if (linkComponentParam.link.imgURL.startsWith("https://pbs.twimg.com/profile_images/") || !forStaggeredView) ContentScale.Crop else ContentScale.Fit,
                     userAgent = linkComponentParam.link.userAgent
                         ?: AppPreferences.primaryJsoupUserAgent.value
                 )

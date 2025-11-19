@@ -166,7 +166,7 @@ fun LanguageSettingsScreen() {
                             )
                         }
                         Text(
-                            text = if (AppPreferences.useLanguageStringsBasedOnFetchedValuesFromServer.value) Localization.Key.DisplayingRemoteStrings.rememberLocalizedString() else Localization.Key.DisplayingCompiledStrings.rememberLocalizedString(),
+                            text = if (AppPreferences.useRemoteStrings.value) Localization.Key.DisplayingRemoteStrings.rememberLocalizedString() else Localization.Key.DisplayingCompiledStrings.rememberLocalizedString(),
                             style = MaterialTheme.typography.titleSmall,
                             fontSize = 14.sp,
                             lineHeight = 18.sp,

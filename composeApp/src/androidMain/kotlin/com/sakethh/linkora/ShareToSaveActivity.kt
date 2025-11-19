@@ -33,7 +33,6 @@ import com.sakethh.linkora.ui.LocalNavController
 import com.sakethh.linkora.ui.LocalPlatform
 import com.sakethh.linkora.ui.components.AddANewLinkDialogBox
 import com.sakethh.linkora.ui.domain.ScreenType
-import com.sakethh.linkora.ui.theme.AndroidTypography
 import com.sakethh.linkora.ui.theme.DarkColors
 import com.sakethh.linkora.ui.theme.LightColors
 import com.sakethh.linkora.ui.theme.LinkoraTheme
@@ -80,8 +79,8 @@ class ShareToSaveActivity : ComponentActivity() {
             ) {
                 val context = LocalContext.current
                 val darkColors = DarkColors.copy(
-                    background = if (AppPreferences.shouldUseAmoledTheme.value) Color(0xFF000000) else DarkColors.background,
-                    surface = if (AppPreferences.shouldUseAmoledTheme.value) Color(0xFF000000) else DarkColors.surface
+                    background = if (AppPreferences.useAmoledTheme.value) Color(0xFF000000) else DarkColors.background,
+                    surface = if (AppPreferences.useAmoledTheme.value) Color(0xFF000000) else DarkColors.surface
                 )
                 LaunchedEffect(Unit) {
                     UIEvent.uiEvents.collectLatest {
@@ -93,13 +92,13 @@ class ShareToSaveActivity : ComponentActivity() {
                     }
                 }
                 val colors = when {
-                    AppPreferences.shouldUseDynamicTheming.value && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-                        if (AppPreferences.shouldFollowSystemTheme.value) {
+                    AppPreferences.useDynamicTheming.value && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+                        if (AppPreferences.useSystemTheme.value) {
                             if (isSystemInDarkTheme()) dynamicDarkColorScheme(context).copy(
-                                background = if (AppPreferences.shouldUseAmoledTheme.value) Color(
+                                background = if (AppPreferences.useAmoledTheme.value) Color(
                                     0xFF000000
                                 ) else dynamicDarkColorScheme(context).background,
-                                surface = if (AppPreferences.shouldUseAmoledTheme.value) Color(
+                                surface = if (AppPreferences.useAmoledTheme.value) Color(
                                     0xFF000000
                                 ) else dynamicDarkColorScheme(
                                     context
@@ -108,13 +107,13 @@ class ShareToSaveActivity : ComponentActivity() {
                                 context
                             )
                         } else {
-                            if (AppPreferences.shouldUseForceDarkTheme.value) dynamicDarkColorScheme(
+                            if (AppPreferences.useDarkTheme.value) dynamicDarkColorScheme(
                                 context
                             ).copy(
-                                background = if (AppPreferences.shouldUseAmoledTheme.value) Color(
+                                background = if (AppPreferences.useAmoledTheme.value) Color(
                                     0xFF000000
                                 ) else dynamicDarkColorScheme(context).background,
-                                surface = if (AppPreferences.shouldUseAmoledTheme.value) Color(
+                                surface = if (AppPreferences.useAmoledTheme.value) Color(
                                     0xFF000000
                                 ) else dynamicDarkColorScheme(
                                     context
@@ -123,14 +122,14 @@ class ShareToSaveActivity : ComponentActivity() {
                         }
                     }
 
-                    else -> if (AppPreferences.shouldFollowSystemTheme.value) {
+                    else -> if (AppPreferences.useSystemTheme.value) {
                         if (isSystemInDarkTheme()) darkColors else LightColors
                     } else {
-                        if (AppPreferences.shouldUseForceDarkTheme.value) darkColors else LightColors
+                        if (AppPreferences.useDarkTheme.value) darkColors else LightColors
                     }
                 }
                 LinkoraTheme(
-                    typography = AndroidTypography, colorScheme = colors
+                    colorScheme = colors
                 ) {
                     AddANewLinkDialogBox(
                         onDismiss = {
