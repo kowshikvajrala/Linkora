@@ -392,4 +392,63 @@ class DataSettingsScreenVM(
             }
         }
     }
+    fun saveGistId(gistId: String) {
+        viewModelScope.launch {
+            preferencesRepository.changePreferenceValue(
+                preferenceKey = stringPreferencesKey(AppPreferenceType.GITHUB_GIST_ID.name),
+                newValue = gistId
+            )
+            AppPreferences.gitHubGistId.value = gistId
+        }
+    }
+
+    fun importDataFromGist(onStart: () -> Unit, onCompletion: () -> Unit) {
+        AppVM.pauseSnapshots = true
+        importExportJob?.cancel()
+        importExportJob = viewModelScope.launch(Dispatchers.IO) {
+            try {
+                withContext(Dispatchers.Main) { onStart() }
+                importExportProgressLogs.add("Fetching Gist from GitHub...")
+                val token = AppPreferences.gitHubToken.value
+                val gistId = AppPreferences.gitHubGistId.value
+                
+                if (token.isBlank() || gistId.isBlank()) {
+                    pushUIEvent(UIEvent.Type.ShowSnackbar("Token or Gist ID is missing"))
+                    withContext(Dispatchers.Main) { onCompletion() }
+                    return@launch
+                }
+
+                val gistResponse = gitHubClient.getGist(token, gistId)
+                val fileContent = gistResponse.files.values.firstOrNull()?.content
+                
+                if (fileContent != null) {
+                    val tempFile = File.createTempFile("linkora_restore", ".json")
+                    tempFile.writeText(fileContent)
+                    
+                    importExportProgressLogs.add("Importing data from Gist...")
+                    importDataRepo.importDataFromAJSONFile(tempFile).collectLatest {
+                        it.onLoading { log ->
+                            importExportProgressLogs.add(log)
+                        }.onSuccess {
+                            pushUIEvent(UIEvent.Type.ShowSnackbar(Localization.Key.SuccessfullyImportedTheData.getLocalizedString()))
+                            tempFile.delete()
+                        }.onFailure { error ->
+                            pushUIEvent(UIEvent.Type.ShowSnackbar("Import failed: $error"))
+                            tempFile.delete()
+                        }
+                    }
+                } else {
+                     pushUIEvent(UIEvent.Type.ShowSnackbar("No files found in Gist"))
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                 pushUIEvent(UIEvent.Type.ShowSnackbar("Import failed: ${e.message}"))
+            } finally {
+                AppVM.pauseSnapshots = false
+                AppVM.forceSnapshot()
+                withContext(Dispatchers.Main) { onCompletion() }
+                importExportProgressLogs.clear()
+            }
+        }
+    }
 }

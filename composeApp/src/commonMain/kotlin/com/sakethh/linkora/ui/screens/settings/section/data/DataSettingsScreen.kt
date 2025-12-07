@@ -422,10 +422,11 @@ fun DataSettingsScreen() {
                     value = gistId.value,
                     onValueChange = {
                         gistId.value = it
-                        // Optional: Allow manual editing if they have an existing gist ID
+                        dataSettingsScreenVM.saveGistId(it)
                     },
-                    readOnly = true, // Mostly read-only as it's auto-generated, but could be editable if advanced
-                    label = { Text("Gist ID (Auto-generated)") },
+                    readOnly = false,
+                    label = { Text("Gist ID (Optional)") },
+                    supportingText = { Text("Enter existing Gist ID to restore or reuse backup") },
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 15.dp)
                 )
                 
@@ -448,18 +449,36 @@ fun DataSettingsScreen() {
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                Button(
-                    onClick = {
-                        dataOperationTitle.value = "Backing up to GitHub Gist..."
-                        dataSettingsScreenVM.triggerGitHubBackup(
-                            onStart = { isImportExportProgressUIVisible.value = true },
-                            onCompletion = { isImportExportProgressUIVisible.value = false }
-                        )
-                    },
+                Row(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 15.dp),
-                    enabled = token.value.isNotBlank()
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Text("Backup Now")
+                    Button(
+                        onClick = {
+                            dataOperationTitle.value = "Backing up to GitHub Gist..."
+                            dataSettingsScreenVM.triggerGitHubBackup(
+                                onStart = { isImportExportProgressUIVisible.value = true },
+                                onCompletion = { isImportExportProgressUIVisible.value = false }
+                            )
+                        },
+                        modifier = Modifier.weight(1f),
+                        enabled = token.value.isNotBlank()
+                    ) {
+                        Text("Backup Now")
+                    }
+                    Button(
+                        onClick = {
+                            dataOperationTitle.value = "Restoring from GitHub Gist..."
+                            dataSettingsScreenVM.importDataFromGist(
+                                onStart = { isImportExportProgressUIVisible.value = true },
+                                onCompletion = { isImportExportProgressUIVisible.value = false }
+                            )
+                        },
+                        modifier = Modifier.weight(1f),
+                        enabled = token.value.isNotBlank() && gistId.value.isNotBlank()
+                    ) {
+                        Text("Restore")
+                    }
                 }
             }
             item {
