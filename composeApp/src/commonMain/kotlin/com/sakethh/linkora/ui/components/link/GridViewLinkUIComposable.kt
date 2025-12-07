@@ -122,6 +122,22 @@ fun GridViewLinkUIComponent(
                 maxLines = 3
             )
         }
+        if (AppPreferences.enableNoteForNonListViews.value && linkUIComponentParam.link.note.isNotBlank()) {
+            Text(
+                text = linkUIComponentParam.link.note,
+                modifier = Modifier.padding(
+                    start = 10.dp,
+                    top = 10.dp,
+                    end = 10.dp,
+                    bottom = if (linkUIComponentParam.isSelectionModeEnabled.value || !AppPreferences.enableBaseURLForLinkViews.value) 10.dp else 0.dp
+                ),
+                style = MaterialTheme.typography.titleSmall,
+                overflow = TextOverflow.Ellipsis,
+                fontSize = 12.sp,
+                maxLines = 3,
+                color = MaterialTheme.colorScheme.onSurface.copy(0.75f)
+            )
+        }
         if (!linkUIComponentParam.isSelectionModeEnabled.value && AppPreferences.enableBaseURLForLinkViews.value) {
             Text(
                 text = linkUIComponentParam.link.url.host(throwOnException = false),

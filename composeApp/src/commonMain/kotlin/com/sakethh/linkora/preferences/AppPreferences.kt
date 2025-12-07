@@ -62,6 +62,7 @@ object AppPreferences {
     val enableTitleForNonListViews = mutableStateOf(true)
     val enableBaseURLForLinkViews = mutableStateOf(true)
     val enableFadedEdgeForNonListViews = mutableStateOf(true)
+    val enableNoteForNonListViews = mutableStateOf(false)
     val shouldFollowAmoledTheme = mutableStateOf(false)
     val forceSaveWithoutFetchingAnyMetaData = mutableStateOf(false)
     val skipSavingExistingLink = mutableStateOf(true)
@@ -280,6 +281,13 @@ object AppPreferences {
                                 preferenceKey = booleanPreferencesKey(AppPreferenceType.BORDER_VISIBILITY_FOR_NON_LIST_VIEWS.name),
 
                                 ) ?: enableBorderForNonListViews.value
+                    },
+                    launch {
+                        enableNoteForNonListViews.value =
+                            preferencesRepository.readPreferenceValue(
+                                preferenceKey = booleanPreferencesKey(AppPreferenceType.NOTE_VISIBILITY_FOR_NON_LIST_VIEWS.name),
+
+                                ) ?: enableNoteForNonListViews.value
                     },
                     launch {
                         enableTitleForNonListViews.value =
