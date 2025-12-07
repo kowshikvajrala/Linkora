@@ -128,4 +128,19 @@ actual class NativeUtils(private val context: Context) {
 
         onCompletion()
     }
+
+    actual fun scheduleGitHubExport() {
+        val workManager = WorkManager.getInstance(context)
+        val request = androidx.work.PeriodicWorkRequestBuilder<com.sakethh.linkora.worker.GitHubExportWorker>(
+            1, java.util.concurrent.TimeUnit.DAYS
+        ).setConstraints(
+            Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
+        ).build()
+
+        workManager.enqueueUniquePeriodicWork(
+            "GitHubExportWorker",
+            androidx.work.ExistingPeriodicWorkPolicy.UPDATE,
+            request
+        )
+    }
 }

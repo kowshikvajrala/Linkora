@@ -387,6 +387,102 @@ fun DataSettingsScreen() {
             }
             item {
                 Text(
+                    text = "Auto-Backup to GitHub",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontSize = 16.sp,
+                    lineHeight = 20.sp,
+                    textAlign = TextAlign.Start,
+                    modifier = Modifier.padding(start = 15.dp, end = 15.dp),
+                )
+                Text(
+                    text = "Automatically backup your data to a private GitHub Gist.",
+                    style = MaterialTheme.typography.titleSmall,
+                    lineHeight = 20.sp,
+                    textAlign = TextAlign.Start,
+                    modifier = Modifier.padding(start = 15.dp, end = 15.dp, top = 5.dp),
+                )
+                Spacer(modifier = Modifier.height(15.dp))
+
+                val token = rememberSaveable { mutableStateOf(AppPreferences.gitHubToken.value) }
+                val gistId = rememberSaveable { mutableStateOf(AppPreferences.gitHubGistId.value) }
+                val isEnabled = rememberSaveable { mutableStateOf(AppPreferences.isAutoBackupEnabled.value) }
+                val interval = rememberSaveable { mutableStateOf(AppPreferences.autoBackupInterval.value) }
+
+                OutlinedTextField(
+                    value = token.value,
+                    onValueChange = {
+                        token.value = it
+                        dataSettingsScreenVM.saveGitHubSettings(it, interval.value, isEnabled.value)
+                    },
+                    label = { Text("GitHub Personal Access Token") },
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 15.dp)
+                )
+                Spacer(modifier = Modifier.height(5.dp))
+                OutlinedTextField(
+                    value = gistId.value,
+                    onValueChange = {
+                        gistId.value = it
+                        dataSettingsScreenVM.saveGistId(it)
+                    },
+                    readOnly = false,
+                    label = { Text("Gist ID (Optional)") },
+                    supportingText = { Text("Enter existing Gist ID to restore or reuse backup") },
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 15.dp)
+                )
+                
+                Spacer(modifier = Modifier.height(10.dp))
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 15.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Enable Auto-Backup")
+                    androidx.compose.material3.Switch(
+                        checked = isEnabled.value,
+                        onCheckedChange = {
+                            isEnabled.value = it
+                            dataSettingsScreenVM.saveGitHubSettings(token.value, interval.value, it)
+                        }
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 15.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Button(
+                        onClick = {
+                            dataOperationTitle.value = "Backing up to GitHub Gist..."
+                            dataSettingsScreenVM.triggerGitHubBackup(
+                                onStart = { isImportExportProgressUIVisible.value = true },
+                                onCompletion = { isImportExportProgressUIVisible.value = false }
+                            )
+                        },
+                        modifier = Modifier.weight(1f),
+                        enabled = token.value.isNotBlank()
+                    ) {
+                        Text("Backup Now")
+                    }
+                    Button(
+                        onClick = {
+                            dataOperationTitle.value = "Restoring from GitHub Gist..."
+                            dataSettingsScreenVM.importDataFromGist(
+                                onStart = { isImportExportProgressUIVisible.value = true },
+                                onCompletion = { isImportExportProgressUIVisible.value = false }
+                            )
+                        },
+                        modifier = Modifier.weight(1f),
+                        enabled = token.value.isNotBlank() && gistId.value.isNotBlank()
+                    ) {
+                        Text("Restore")
+                    }
+                }
+            }
+            item {
+                Text(
                     text = Localization.rememberLocalizedString(Localization.Key.Sync),
                     style = MaterialTheme.typography.titleMedium,
                     fontSize = 16.sp,

@@ -50,7 +50,8 @@ class DataSettingsScreenVM(
     private val remoteSyncRepo: RemoteSyncRepo,
     private val nativeUtils: NativeUtils,
     private val fileManager: FileManager,
-    private val permissionManager: PermissionManager
+    private val permissionManager: PermissionManager,
+    private val gitHubClient: com.sakethh.linkora.data.remote.GitHubClient
 ) : SettingsScreenViewModel(preferencesRepository,nativeUtils) {
     val importExportProgressLogs = mutableStateListOf<String>()
 
@@ -318,6 +319,136 @@ class DataSettingsScreenVM(
                 ), newValue = count
             )
             AppPreferences.backupAutoDeleteThreshold.intValue = count
+        }
+    }
+
+    fun saveGitHubSettings(token: String, interval: String, isEnabled: Boolean) {
+        viewModelScope.launch {
+            preferencesRepository.changePreferenceValue(
+                preferenceKey = stringPreferencesKey(AppPreferenceType.GITHUB_TOKEN.name),
+                newValue = token
+            )
+            preferencesRepository.changePreferenceValue(
+                preferenceKey = booleanPreferencesKey(AppPreferenceType.IS_AUTO_BACKUP_ENABLED.name),
+                newValue = isEnabled
+            )
+            preferencesRepository.changePreferenceValue(
+                preferenceKey = stringPreferencesKey(AppPreferenceType.AUTO_BACKUP_INTERVAL.name),
+                newValue = interval
+            )
+            AppPreferences.gitHubToken.value = token
+            AppPreferences.isAutoBackupEnabled.value = isEnabled
+            AppPreferences.autoBackupInterval.value = interval
+            
+            if (isEnabled) {
+                nativeUtils.scheduleGitHubExport()
+            }
+        }
+    }
+
+    fun triggerGitHubBackup(onStart: () -> Unit, onCompletion: () -> Unit) {
+        viewModelScope.launch {
+            onStart()
+            exportDataRepo.rawExportDataAsJSON().collectLatest {
+                it.onLoading { log ->
+                    importExportProgressLogs.add(log)
+                }.onSuccess { success ->
+                    try {
+                        importExportProgressLogs.add(Localization.Key.ExportingDataToJSON.getLocalizedString())
+                        val existingGistId = AppPreferences.gitHubGistId.value
+                        if (existingGistId.isNotBlank()) {
+                            importExportProgressLogs.add("Updating existing Gist...")
+                            gitHubClient.updateGist(
+                                token = AppPreferences.gitHubToken.value,
+                                gistId = existingGistId,
+                                filename = "linkora_backup.json",
+                                content = success.data
+                            )
+                            pushUIEvent(UIEvent.Type.ShowSnackbar("Backup updated successfully!"))
+                        } else {
+                            importExportProgressLogs.add("Creating new Gist...")
+                            val response = gitHubClient.createGist(
+                                token = AppPreferences.gitHubToken.value,
+                                description = "Linkora Backup",
+                                filename = "linkora_backup.json",
+                                content = success.data
+                            )
+                            preferencesRepository.changePreferenceValue(
+                                preferenceKey = stringPreferencesKey(AppPreferenceType.GITHUB_GIST_ID.name),
+                                newValue = response.id
+                            )
+                            AppPreferences.gitHubGistId.value = response.id
+                            pushUIEvent(UIEvent.Type.ShowSnackbar("Backup created successfully!"))
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        pushUIEvent(UIEvent.Type.ShowSnackbar("Backup failed: ${e.message}"))
+                    }
+                    onCompletion()
+                }.onFailure { failure ->
+                     pushUIEvent(UIEvent.Type.ShowSnackbar("Export failed: $failure"))
+                     onCompletion()
+                }
+            }
+        }
+    }
+    fun saveGistId(gistId: String) {
+        viewModelScope.launch {
+            preferencesRepository.changePreferenceValue(
+                preferenceKey = stringPreferencesKey(AppPreferenceType.GITHUB_GIST_ID.name),
+                newValue = gistId
+            )
+            AppPreferences.gitHubGistId.value = gistId
+        }
+    }
+
+    fun importDataFromGist(onStart: () -> Unit, onCompletion: () -> Unit) {
+        AppVM.pauseSnapshots = true
+        importExportJob?.cancel()
+        importExportJob = viewModelScope.launch(Dispatchers.IO) {
+            try {
+                withContext(Dispatchers.Main) { onStart() }
+                importExportProgressLogs.add("Fetching Gist from GitHub...")
+                val token = AppPreferences.gitHubToken.value
+                val gistId = AppPreferences.gitHubGistId.value
+                
+                if (token.isBlank() || gistId.isBlank()) {
+                    pushUIEvent(UIEvent.Type.ShowSnackbar("Token or Gist ID is missing"))
+                    withContext(Dispatchers.Main) { onCompletion() }
+                    return@launch
+                }
+
+                val gistResponse = gitHubClient.getGist(token, gistId)
+                val fileContent = gistResponse.files.values.firstOrNull()?.content
+                
+                if (fileContent != null) {
+                    val tempFile = File.createTempFile("linkora_restore", ".json")
+                    tempFile.writeText(fileContent)
+                    
+                    importExportProgressLogs.add("Importing data from Gist...")
+                    importDataRepo.importDataFromAJSONFile(tempFile).collectLatest {
+                        it.onLoading { log ->
+                            importExportProgressLogs.add(log)
+                        }.onSuccess {
+                            pushUIEvent(UIEvent.Type.ShowSnackbar(Localization.Key.SuccessfullyImportedTheData.getLocalizedString()))
+                            tempFile.delete()
+                        }.onFailure { error ->
+                            pushUIEvent(UIEvent.Type.ShowSnackbar("Import failed: $error"))
+                            tempFile.delete()
+                        }
+                    }
+                } else {
+                     pushUIEvent(UIEvent.Type.ShowSnackbar("No files found in Gist"))
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                 pushUIEvent(UIEvent.Type.ShowSnackbar("Import failed: ${e.message}"))
+            } finally {
+                AppVM.pauseSnapshots = false
+                AppVM.forceSnapshot()
+                withContext(Dispatchers.Main) { onCompletion() }
+                importExportProgressLogs.clear()
+            }
         }
     }
 }

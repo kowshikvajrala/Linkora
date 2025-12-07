@@ -480,6 +480,18 @@ open class SettingsScreenViewModel(
             title = Localization.Key.ShowBottomFadedEdge.getLocalizedString(),
             isSwitchChecked = AppPreferences.enableFadedEdgeForNonListViews
         ),
+        LinkPref(
+            onClick = {
+                AppPreferences.enableNoteForNonListViews.value =
+                    !AppPreferences.enableNoteForNonListViews.value
+                changeSettingPreferenceValue(
+                    preferenceKey = booleanPreferencesKey(AppPreferenceType.NOTE_VISIBILITY_FOR_NON_LIST_VIEWS.name),
+                    newValue = AppPreferences.enableNoteForNonListViews.value
+                )
+            },
+            title = Localization.Key.ShowNote.getLocalizedString(),
+            isSwitchChecked = AppPreferences.enableNoteForNonListViews
+        ),
     )
 
     private val allIconCodes = AppIconCode.entries.map { it.name }

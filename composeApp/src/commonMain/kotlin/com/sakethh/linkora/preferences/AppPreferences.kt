@@ -62,6 +62,7 @@ object AppPreferences {
     val enableTitleForNonListViews = mutableStateOf(true)
     val enableBaseURLForLinkViews = mutableStateOf(true)
     val enableFadedEdgeForNonListViews = mutableStateOf(true)
+    val enableNoteForNonListViews = mutableStateOf(false)
     val shouldFollowAmoledTheme = mutableStateOf(false)
     val forceSaveWithoutFetchingAnyMetaData = mutableStateOf(false)
     val skipSavingExistingLink = mutableStateOf(true)
@@ -90,6 +91,11 @@ object AppPreferences {
     var selectedCollectionSourceId by mutableIntStateOf(0)
     var selectedAppIcon by mutableStateOf(AppIconCode.new_logo.name)
     var showTagsInAddNewLinkDialogBox by mutableStateOf(false)
+
+    val gitHubToken = mutableStateOf("")
+    val gitHubGistId = mutableStateOf("")
+    val isAutoBackupEnabled = mutableStateOf(false)
+    val autoBackupInterval = mutableStateOf("DAILY")
     suspend fun lastSyncedLocally(preferencesRepository: PreferencesRepository): Long {
         return preferencesRepository.readPreferenceValue(
             preferenceKey = longPreferencesKey(AppPreferenceType.LAST_TIME_SYNCED_WITH_SERVER.name)
@@ -275,6 +281,13 @@ object AppPreferences {
                                 preferenceKey = booleanPreferencesKey(AppPreferenceType.BORDER_VISIBILITY_FOR_NON_LIST_VIEWS.name),
 
                                 ) ?: enableBorderForNonListViews.value
+                    },
+                    launch {
+                        enableNoteForNonListViews.value =
+                            preferencesRepository.readPreferenceValue(
+                                preferenceKey = booleanPreferencesKey(AppPreferenceType.NOTE_VISIBILITY_FOR_NON_LIST_VIEWS.name),
+
+                                ) ?: enableNoteForNonListViews.value
                     },
                     launch {
                         enableTitleForNonListViews.value =
@@ -470,6 +483,30 @@ object AppPreferences {
                                 AppPreferenceType.SHOW_TAGS_BY_DEFAULT_IN_ADD_LINK.name
                             )
                         ) ?: true
+                    }, launch {
+                        gitHubToken.value = preferencesRepository.readPreferenceValue(
+                            preferenceKey = stringPreferencesKey(
+                                AppPreferenceType.GITHUB_TOKEN.name
+                            )
+                        ) ?: ""
+                    }, launch {
+                        gitHubGistId.value = preferencesRepository.readPreferenceValue(
+                            preferenceKey = stringPreferencesKey(
+                                AppPreferenceType.GITHUB_GIST_ID.name
+                            )
+                        ) ?: ""
+                    }, launch {
+                        isAutoBackupEnabled.value = preferencesRepository.readPreferenceValue(
+                            preferenceKey = booleanPreferencesKey(
+                                AppPreferenceType.IS_AUTO_BACKUP_ENABLED.name
+                            )
+                        ) == true
+                    }, launch {
+                        autoBackupInterval.value = preferencesRepository.readPreferenceValue(
+                            preferenceKey = stringPreferencesKey(
+                                AppPreferenceType.AUTO_BACKUP_INTERVAL.name
+                            )
+                        ) ?: "DAILY"
                     }
                 ).joinAll()
             }

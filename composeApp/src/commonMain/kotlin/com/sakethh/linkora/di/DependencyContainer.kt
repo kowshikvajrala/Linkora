@@ -144,6 +144,10 @@ object DependencyContainer {
         })
     }
 
+    val gitHubClient by lazy {
+        com.sakethh.linkora.data.remote.GitHubClient(httpClient = Network.standardClient)
+    }
+
     val gitHubReleasesRepo by lazy {
         GitHubReleasesRepoImpl(standardClient = Network.standardClient)
     }
