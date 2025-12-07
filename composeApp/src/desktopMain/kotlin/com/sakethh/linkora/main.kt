@@ -112,6 +112,7 @@ suspend fun main() {
                 AppPreferences.preferredAppLanguageCode.value
             )
         })
+        com.sakethh.linkora.worker.DesktopExportScheduler.startScheduler()
     }
     application {
         val windowState = rememberWindowState(

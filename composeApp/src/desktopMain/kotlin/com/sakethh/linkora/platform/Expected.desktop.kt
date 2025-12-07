@@ -60,5 +60,13 @@ actual class NativeUtils {
         actual fun clearNotification() = Unit
     }
 
-    actual fun onIconChange(allIconCodes: List<String>, newIconCode: String, onCompletion: () -> Unit) = Unit
+    actual fun onIconChange(
+        allIconCodes: List<String>, newIconCode: String, onCompletion: () -> Unit
+    ) {
+    }
+
+    actual fun scheduleGitHubExport() {
+        // Desktop scheduler runs on a separate coroutine loop initiated in main.kt
+        // So this can be a no-op or just ensuring the scheduler is active if we wanted to be robust.
+    }
 }

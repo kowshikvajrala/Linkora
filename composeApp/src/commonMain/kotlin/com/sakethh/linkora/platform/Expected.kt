@@ -85,4 +85,6 @@ expect class NativeUtils {
     }
 
     fun onIconChange(allIconCodes: List<String>, newIconCode: String, onCompletion: () -> Unit)
+
+    fun scheduleGitHubExport()
 }

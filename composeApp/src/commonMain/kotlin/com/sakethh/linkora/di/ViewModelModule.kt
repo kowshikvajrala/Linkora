@@ -66,6 +66,7 @@ object LinkoraViewModelFactory : ViewModelProvider.Factory {
                 nativeUtils = LinkoraSDK.getInstance().nativeUtils,
                 fileManager = LinkoraSDK.getInstance().fileManager,
                 permissionManager = LinkoraSDK.getInstance().permissionManager,
+                gitHubClient = DependencyContainer.gitHubClient
             )
 
             else -> error("Not sure how to create an instance of ${modelClass.simpleName}, maybe it's available in *AssistedFactory")

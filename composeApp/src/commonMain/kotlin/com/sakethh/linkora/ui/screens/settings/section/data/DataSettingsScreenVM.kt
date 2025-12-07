@@ -50,7 +50,8 @@ class DataSettingsScreenVM(
     private val remoteSyncRepo: RemoteSyncRepo,
     private val nativeUtils: NativeUtils,
     private val fileManager: FileManager,
-    private val permissionManager: PermissionManager
+    private val permissionManager: PermissionManager,
+    private val gitHubClient: com.sakethh.linkora.data.remote.GitHubClient
 ) : SettingsScreenViewModel(preferencesRepository,nativeUtils) {
     val importExportProgressLogs = mutableStateListOf<String>()
 
@@ -318,6 +319,77 @@ class DataSettingsScreenVM(
                 ), newValue = count
             )
             AppPreferences.backupAutoDeleteThreshold.intValue = count
+        }
+    }
+
+    fun saveGitHubSettings(token: String, interval: String, isEnabled: Boolean) {
+        viewModelScope.launch {
+            preferencesRepository.changePreferenceValue(
+                preferenceKey = stringPreferencesKey(AppPreferenceType.GITHUB_TOKEN.name),
+                newValue = token
+            )
+            preferencesRepository.changePreferenceValue(
+                preferenceKey = booleanPreferencesKey(AppPreferenceType.IS_AUTO_BACKUP_ENABLED.name),
+                newValue = isEnabled
+            )
+            preferencesRepository.changePreferenceValue(
+                preferenceKey = stringPreferencesKey(AppPreferenceType.AUTO_BACKUP_INTERVAL.name),
+                newValue = interval
+            )
+            AppPreferences.gitHubToken.value = token
+            AppPreferences.isAutoBackupEnabled.value = isEnabled
+            AppPreferences.autoBackupInterval.value = interval
+            
+            if (isEnabled) {
+                nativeUtils.scheduleGitHubExport()
+            }
+        }
+    }
+
+    fun triggerGitHubBackup(onStart: () -> Unit, onCompletion: () -> Unit) {
+        viewModelScope.launch {
+            onStart()
+            exportDataRepo.rawExportDataAsJSON().collectLatest {
+                it.onLoading { log ->
+                    importExportProgressLogs.add(log)
+                }.onSuccess { success ->
+                    try {
+                        importExportProgressLogs.add(Localization.Key.ExportingDataToJSON.getLocalizedString())
+                        val existingGistId = AppPreferences.gitHubGistId.value
+                        if (existingGistId.isNotBlank()) {
+                            importExportProgressLogs.add("Updating existing Gist...")
+                            gitHubClient.updateGist(
+                                token = AppPreferences.gitHubToken.value,
+                                gistId = existingGistId,
+                                filename = "linkora_backup.json",
+                                content = success.data
+                            )
+                            pushUIEvent(UIEvent.Type.ShowSnackbar("Backup updated successfully!"))
+                        } else {
+                            importExportProgressLogs.add("Creating new Gist...")
+                            val response = gitHubClient.createGist(
+                                token = AppPreferences.gitHubToken.value,
+                                description = "Linkora Backup",
+                                filename = "linkora_backup.json",
+                                content = success.data
+                            )
+                            preferencesRepository.changePreferenceValue(
+                                preferenceKey = stringPreferencesKey(AppPreferenceType.GITHUB_GIST_ID.name),
+                                newValue = response.id
+                            )
+                            AppPreferences.gitHubGistId.value = response.id
+                            pushUIEvent(UIEvent.Type.ShowSnackbar("Backup created successfully!"))
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        pushUIEvent(UIEvent.Type.ShowSnackbar("Backup failed: ${e.message}"))
+                    }
+                    onCompletion()
+                }.onFailure { failure ->
+                     pushUIEvent(UIEvent.Type.ShowSnackbar("Export failed: $failure"))
+                     onCompletion()
+                }
+            }
         }
     }
 }
